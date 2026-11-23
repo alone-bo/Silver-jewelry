@@ -132,7 +132,7 @@ export function Home() {
           <Img
             src={IMG.papillonModel}
             alt="Model wearing a green enamel Papillon ring with pearl and a butterfly pendant"
-            className="aspect-[4/5] lg:aspect-auto lg:min-h-[880px]"
+            className="aspect-[4/5] lg:aspect-auto lg:min-h-[480px]"
             position="center 35%"
           />
           <div className="flex flex-col justify-between gap-10 px-6 py-12 md:gap-16 md:px-16 md:py-24 xl:px-24">
@@ -149,7 +149,7 @@ export function Home() {
                 Explore more colour
               </ButtonLink>
             </Reveal>
-            <div className="grid grid-cols-2 gap-4 md:gap-6">
+            {/* <div className="grid grid-cols-2 gap-4 md:gap-6">
               <Img
                 src={IMG.papillonBlue}
                 alt="Blue enamel butterfly bracelet on a dark ground"
@@ -160,7 +160,7 @@ export function Home() {
                 alt="Yellow enamel butterfly bracelet draped over driftwood"
                 className="aspect-[3/4] translate-y-8 md:translate-y-10"
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
