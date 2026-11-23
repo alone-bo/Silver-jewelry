@@ -3,7 +3,7 @@ import { getCollection, products } from "../data/catalog";
 import { ProductCard } from "../components/ProductCard";
 import { ButtonLink, Eyebrow, Img, Reveal, TextLink } from "../components/ui";
 import { HeroVideo } from "../components/HeroVideo";
-import benchHands from "@/assets/images/匠人锤制银杏叶.png";
+import benchHands from "@/assets/images/silversmith-hammering-ginkgo.png";
 
 /** Three jewellery families shown in "Jewellery with a Natural Rhythm" — Papillon is excluded. */
 const SERIES = [
