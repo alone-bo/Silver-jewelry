@@ -1,0 +1,10 @@
+{
+  "description": "Shop handcrafted silver jewellery and objects, explore the artisanship behind each piece, and enquire about bespoke commissions from a contemporary British brand.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
