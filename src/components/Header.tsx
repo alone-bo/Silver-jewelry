@@ -94,34 +94,49 @@ export const NAV: NavItem[] = [
 ];
 
 const ANNOUNCEMENTS = [
-  "Complimentary UK delivery on orders over £150",
-  "Sculpt — Hand-Hammered Fine Silver Cups, now available",
-  "Bespoke commissions open — begin a conversation",
-  "Every piece hallmarked and finished by hand",
+  {
+    full: "Complimentary UK delivery on orders over £150",
+    short: "Complimentary UK delivery over £150",
+  },
+  {
+    full: "Sculpt — Hand-Hammered Fine Silver Cups, now available",
+    short: "Sculpt cups — now available",
+  },
+  {
+    full: "Bespoke commissions open — begin a conversation",
+    short: "Bespoke commissions open",
+  },
 ];
 
+const ANNOUNCEMENT_DWELL = 6500;
+
 function AnnouncementBar() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setIndex((i) => (i + 1) % ANNOUNCEMENTS.length),
+      ANNOUNCEMENT_DWELL,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const message = ANNOUNCEMENTS[index];
+
   return (
     <div
-      className="marquee border-b border-ivory/10 bg-ink text-ivory"
+      className="flex h-8 items-center justify-center overflow-hidden border-b border-line bg-stone px-4 text-ink md:h-9"
       role="region"
       aria-label="Announcements"
     >
-      <div className="marquee-track h-8 items-center md:h-9">
-        {[0, 1].map((copy) => (
-          <ul key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center">
-            {ANNOUNCEMENTS.map((message) => (
-              <li
-                key={message}
-                className="flex items-center whitespace-nowrap text-[10px] font-medium tracking-[0.18em] text-ivory/85 uppercase"
-              >
-                <span className="px-6">{message}</span>
-                <span aria-hidden className="h-1 w-1 rounded-full bg-ivory/35" />
-              </li>
-            ))}
-          </ul>
-        ))}
-      </div>
+      <p
+        key={index}
+        aria-live="polite"
+        className="animate-fade-in text-center text-[9px] font-medium tracking-[0.12em] uppercase motion-reduce:animate-none sm:text-[10px] sm:tracking-[0.18em]"
+      >
+        <span className="sm:hidden">{message.short}</span>
+        <span className="hidden sm:inline">{message.full}</span>
+      </p>
     </div>
   );
 }

@@ -96,7 +96,8 @@ function Shell() {
     document.title = t ? `${t} — ARGENT LUNE` : "ARGENT LUNE — Where Silver Takes Form.";
   }, [path, segments]);
 
-  const minimal = path === "/checkout" || path === "/order/shipped";
+  const minimal =
+    path === "/checkout" || path === "/order/shipped" || path === "/craft";
 
   return (
     <>

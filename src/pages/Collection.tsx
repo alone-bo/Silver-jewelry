@@ -10,10 +10,16 @@ import {
 } from "../data/catalog";
 import { IMG } from "../data/images";
 import { ProductCard } from "../components/ProductCard";
+import { LoopVideo } from "../components/LoopVideo";
 import { Button, Eyebrow, Img, Reveal } from "../components/ui";
 import { CloseIcon, PlusIcon } from "../components/Icons";
 import { Link, useRoute } from "../lib/router";
 import { cx } from "../lib/format";
+import botanicaModel from "@/assets/images/Botanica_model.jpg";
+import materiaModel from "@/assets/images/Materia_model.jpg";
+import miniatureModel from "@/assets/images/MiniatureSilverware_model.jpg";
+import papillonFilm from "@/assets/videos/papillon-display.mp4";
+import papillonPoster from "@/assets/videos/papillon-display-poster.jpg";
 
 type Sort = "featured" | "newest" | "price-asc" | "price-desc" | "name";
 const SORTS: { value: Sort; label: string }[] = [
@@ -38,8 +44,14 @@ type TemplateProps = {
   banner: string;
   bannerAlt: string;
   bannerPosition?: string;
-  /** "wide" = 16:9 full-width banner with overlaid copy (Shop); "split" = editorial two-column */
-  bannerLayout?: "split" | "wide";
+  /**
+   * "wide" = full-bleed banner with overlaid copy (Shop)
+   * "split" = copy left, image right
+   * "media-left" = image or film left, copy right (collection pages)
+   */
+  bannerLayout?: "split" | "wide" | "media-left";
+  /** Optional film for the media-left banner (e.g. Papillon) */
+  bannerVideo?: { src: string; poster: string; alt: string };
   bannerCta?: string;
   items: Product[];
   showCollectionFilter?: boolean;
@@ -107,6 +119,7 @@ export function CollectionTemplate({
   bannerAlt,
   bannerPosition,
   bannerLayout = "split",
+  bannerVideo,
   bannerCta,
   items,
   showCollectionFilter,
@@ -259,6 +272,42 @@ export function CollectionTemplate({
                 </button>
               ) : null}
             </div>
+          </div>
+        </section>
+      ) : bannerLayout === "media-left" ? (
+        <section className="grid border-b border-line lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            {bannerVideo ? (
+              <LoopVideo
+                src={bannerVideo.src}
+                poster={bannerVideo.poster}
+                label={bannerVideo.alt}
+                position="center 35%"
+                className="aspect-[4/5] w-full lg:aspect-auto lg:h-[min(78vh,760px)]"
+              />
+            ) : (
+              <Img
+                src={banner}
+                alt={bannerAlt}
+                eager
+                position={bannerPosition}
+                className="aspect-[4/5] w-full lg:aspect-auto lg:h-[min(78vh,760px)]"
+              />
+            )}
+          </div>
+          <div className="flex flex-col justify-center px-5 py-10 md:px-10 md:py-16 lg:col-span-6 lg:col-start-7 lg:px-12 xl:px-16">
+            <nav aria-label="Breadcrumb" className="mb-8 text-[12px] text-muted md:mb-10">
+              <Link to="/" className="hover:text-deep">
+                Home
+              </Link>
+              <span className="mx-2">/</span>
+              <span>{eyebrow}</span>
+            </nav>
+            <Eyebrow className="mb-5">{eyebrow}</Eyebrow>
+            <h1 className="display text-5xl sm:text-6xl md:text-7xl">{title}</h1>
+            <p className="body-copy mt-6 max-w-md text-[16px] md:mt-8 md:text-[17px]">
+              {description}
+            </p>
           </div>
         </section>
       ) : (
@@ -498,18 +547,46 @@ export function CollectionTemplate({
   );
 }
 
+const COLLECTION_MEDIA: Record<string, { src: string; alt: string; position: string }> = {
+  botanica: {
+    src: botanicaModel,
+    alt: "Model wearing a silver Botanica earring",
+    position: "center 35%",
+  },
+  materia: {
+    src: materiaModel,
+    alt: "Model wearing sculptural Materia silver earrings",
+    position: "center 40%",
+  },
+  "miniature-silverware": {
+    src: miniatureModel,
+    alt: "Model wearing a Miniature Silverware pendant",
+    position: "center 40%",
+  },
+};
+
 export function CollectionPage({ handle }: { handle: string }) {
   const c = getCollection(handle);
   if (!c || c.kind !== "jewellery") return null;
+  const media = COLLECTION_MEDIA[c.handle];
+  const isPapillon = c.handle === "papillon";
   return (
     <CollectionTemplate
       eyebrow="Jewellery"
       title={c.title}
       description={c.description}
-      banner={c.banner}
-      bannerAlt={c.bannerAlt}
-      bannerPosition={
-        c.handle === "materia" ? "center 60%" : c.handle === "papillon" ? "center 40%" : undefined
+      banner={media?.src ?? c.banner}
+      bannerAlt={media?.alt ?? c.bannerAlt}
+      bannerPosition={media?.position ?? (isPapillon ? "center 40%" : undefined)}
+      bannerLayout="media-left"
+      bannerVideo={
+        isPapillon
+          ? {
+              src: papillonFilm,
+              poster: papillonPoster,
+              alt: "Model wearing Papillon rings and a butterfly pendant",
+            }
+          : undefined
       }
       items={products.filter((p) => p.collection === c.handle)}
       related={collections.filter((x) => x.handle !== c.handle).slice(0, 4)}
@@ -528,6 +605,7 @@ export function AllJewellery() {
       banner={IMG.heroRings}
       bannerAlt="Sculptural silver rings worn on the hand"
       bannerPosition="center 62%"
+      bannerLayout="media-left"
       items={products.filter((p) => p.kind === "jewellery")}
       showCollectionFilter
       initialCategory={category}

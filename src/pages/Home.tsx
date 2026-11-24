@@ -3,7 +3,7 @@ import { getCollection, products } from "../data/catalog";
 import { ProductCard } from "../components/ProductCard";
 import { ButtonLink, Eyebrow, Img, Reveal, TextLink } from "../components/ui";
 import { HeroVideo } from "../components/HeroVideo";
-import benchHands from "@/assets/images/silversmith-hammering-ginkgo.png";
+import benchHands from "@/assets/images/silversmith-hammering-ginkgo.jpg";
 
 /** Three jewellery families shown in "Jewellery with a Natural Rhythm" — Papillon is excluded. */
 const SERIES = [
@@ -60,23 +60,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* 2 — Brand introduction */}
-      <section className="container-lune grid items-center gap-8 py-14 md:gap-12 md:py-28 lg:grid-cols-12 lg:gap-16">
-        <Reveal className="lg:col-span-7">
-          <Img
-            src={benchHands}
-            alt="A silversmith’s hands at work on a piece of jewellery at the bench"
-            className="aspect-[4/3]"
-          />
-        </Reveal>
-        <Reveal className="lg:col-span-4 lg:col-start-9" delay={120}>
-          <h2 className="display text-5xl md:text-7xl">The Art of Silver</h2>
-          <p className="body-copy mt-6 text-[17px] md:mt-8">
-            Rooted in traditional craftsmanship, Argent Lune brings silver into contemporary life
-            through jewellery and objects shaped by hand.
-          </p>
-        </Reveal>
-      </section>
 
       {/* 3 — Jewellery: three series, two pieces each */}
       <section className="border-t border-line bg-ivory py-14 md:py-28">
@@ -192,7 +175,7 @@ export function Home() {
               className="aspect-[4/5]"
             />
             <p className="mt-4 flex justify-between text-[13px] text-muted">
-              <span>Sculpt — Hand-Hammered Fine Silver Cups</span>
+              <span>Sculpt - Hand-Hammered Fine Silver Cups</span>
               <span>Set of Two</span>
             </p>
           </Reveal>
@@ -222,26 +205,35 @@ export function Home() {
           </Reveal>
         </div>
       </section>
-
-      {/* 7 — About */}
-      <section className="border-t border-line">
-        <div className="container-lune py-16 text-center md:py-32">
-          <Reveal>
-            <Eyebrow className="mb-6 md:mb-8">About Argent Lune</Eyebrow>
-            <h2 className="display mx-auto max-w-4xl text-5xl md:text-8xl">
-              Where Silver <em>Takes Form.</em>
-            </h2>
-            <p className="body-copy mx-auto mt-8 max-w-2xl text-[17px] md:mt-10">
-              Argent Lune began with a fascination for the way silver responds to the hand. We look
-              for forms found in nature, surfaces left honest by the tool, and the small
-              irregularities that make a piece unmistakably made. Silver changes with time and touch
-              — and we believe that is where its beauty lies.
-            </p>
-            <TextLink to="/about" className="mt-8 md:mt-10">
-              Our Story
-            </TextLink>
-          </Reveal>
-        </div>
+{/* 2 — About Argent Lune / The Art of Silver (merged) */}
+      <section className="container-lune grid items-center gap-8 py-14 md:gap-12 md:py-24 lg:grid-cols-12 lg:gap-16">
+        <Reveal className="lg:col-span-7">
+          <Img
+            src={benchHands}
+            alt="A silversmith’s hammer shaping a silver ginkgo leaf on a workbench"
+            className="aspect-[4/3]"
+          />
+        </Reveal>
+        <Reveal className="lg:col-span-4 lg:col-start-9" delay={120}>
+          <Eyebrow className="mb-5 text-deep md:mb-6">About Argent Lune</Eyebrow>
+          <h2 className="display text-5xl md:text-7xl">The Art of Silver</h2>
+          <p className="mt-3 font-serif text-2xl italic text-muted md:text-3xl">
+            Where Silver Takes Form.
+          </p>
+          <p className="body-copy mt-6 text-[16px] md:mt-8 md:text-[17px]">
+            Rooted in traditional craftsmanship, Argent Lune brings silver into contemporary life
+            through jewellery and objects shaped by hand.
+          </p>
+          <p className="body-copy mt-4 text-[16px] md:text-[17px]">
+            Argent Lune began with a fascination for the way silver responds to the hand. We look for
+            forms found in nature, surfaces left honest by the tool, and the small irregularities
+            that make a piece unmistakably made. Silver changes with time and touch — and we believe
+            that is where its beauty lies.
+          </p>
+          <TextLink to="/about" className="mt-7 md:mt-9">
+            Our Story
+          </TextLink>
+        </Reveal>
       </section>
     </>
   );

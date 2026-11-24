@@ -13,7 +13,7 @@ export function HeroVideo({ className }: { className?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [muted, setMuted] = useState(true)
   const [playing, setPlaying] = useState(true)
-  const [loaded, setLoaded] = useState(false)
+  const [started, setStarted] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
@@ -68,7 +68,7 @@ export function HeroVideo({ className }: { className?: string }) {
     <div className={cx('relative overflow-hidden bg-ink', className)}>
       <video
         ref={videoRef}
-        className={cx('hero-video h-full w-full object-cover transition-opacity duration-700', loaded ? 'opacity-100' : 'opacity-0')}
+        className={cx('hero-video h-full w-full object-cover transition-opacity duration-700', started ? 'opacity-100' : 'opacity-0')}
         src={film}
         poster={poster}
         autoPlay
@@ -77,10 +77,23 @@ export function HeroVideo({ className }: { className?: string }) {
         playsInline
         preload="metadata"
         aria-label="A silversmith hammering a silver vessel into shape — silent loop"
-        onLoadedData={() => setLoaded(true)}
-        onPlay={() => setPlaying(true)}
+        onPlaying={() => {
+          setPlaying(true)
+          setStarted(true)
+        }}
         onPause={() => setPlaying(false)}
         onVolumeChange={(e) => setMuted(e.currentTarget.muted)}
+      />
+
+      {/* Cover frame — holds until the film actually starts, then fades away */}
+      <img
+        src={poster}
+        alt=""
+        aria-hidden="true"
+        className={cx(
+          'hero-video pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-700',
+          started ? 'opacity-0' : 'opacity-100',
+        )}
       />
 
       {/* Sound toggle */}

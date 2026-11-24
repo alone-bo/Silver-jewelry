@@ -13,8 +13,9 @@ const initial = {
   name: "",
   email: "",
   type: "",
+  budget: "",
+  country: "",
   description: "",
-  material: "",
   quantity: "",
   date: "",
 };
@@ -89,6 +90,8 @@ export function Bespoke() {
     if (!form.name.trim()) er.name = "Please enter your full name.";
     if (!isEmail(form.email)) er.email = "Please enter a valid email address.";
     if (!form.type) er.type = "Please choose the type of object.";
+    if (!form.country.trim())
+      er.country = "Please enter the delivery country or region.";
     if (form.description.trim().length < 20)
       er.description =
         "Please describe your idea in a little more detail (at least 20 characters).";
@@ -112,14 +115,14 @@ export function Bespoke() {
     <>
       {/* Hero */}
       <section className="grid border-b border-line lg:grid-cols-2">
-        <div className="flex flex-col justify-end px-5 pb-14 pt-16 md:px-10 md:pb-20 md:pt-24 xl:px-16">
+        <div className="flex flex-col justify-center px-5 pb-12 pt-14 md:px-10 md:pb-16 md:pt-20 xl:px-16">
           <Eyebrow className="mb-6">Bespoke Silver Objects</Eyebrow>
           <h1 className="display text-6xl md:text-8xl">
             Your Ideas,
             <br />
             <em>Shaped by Hand.</em>
           </h1>
-          <p className="body-copy mt-8 max-w-lg text-[17px]">
+          <p className="body-copy mt-8 max-w-lg text-[17px] text-ink/80">
             Some objects begin with a personal idea. Working with skilled silversmiths, we explore
             bespoke silver pieces shaped around individual preferences, from cups and tea vessels to
             objects created for meaningful occasions.
@@ -153,15 +156,15 @@ export function Bespoke() {
           {[
             [
               "Enquiry",
-              "Share your idea, references and any practical requirements using the form below.",
+              "Tell us about the object, its purpose, your inspiration and any practical requirements using the form below.",
             ],
             [
-              "Feasibility",
-              "We review your idea with our silversmiths and confirm feasibility, material availability, pricing and production time.",
+              "Design & Quotation",
+              "We review feasibility and discuss design, materials, price and timing, then send a written proposal and quotation.",
             ],
             [
               "Making",
-              "Once a proposal is agreed in writing, your piece is shaped by hand using traditional techniques.",
+              "Once the specification, price and payment terms are agreed, making begins at the bench.",
             ],
           ].map(([t, d], i) => (
             <div key={t} className="border-t border-ink pt-6">
@@ -209,7 +212,9 @@ export function Bespoke() {
                 <dl className="mt-8 grid gap-0 text-[14px]">
                   {[
                     ["Type of object", form.type],
-                    ["Preferred material", form.material || "—"],
+                    ["Approximate budget", form.budget ? `£${form.budget}` : "—"],
+                    ["Delivery country or region", form.country],
+                    ["Preferred delivery date", form.date || "—"],
                     ["Estimated quantity", form.quantity || "—"],
                     ["Reference images", `${files.length}`],
                   ].map(([k, v]) => (
@@ -235,8 +240,9 @@ export function Bespoke() {
                 </Button>
               </div>
             ) : (
+              <>
               <form onSubmit={submit} noValidate className="grid gap-7 md:grid-cols-2">
-                <Field label="Full Name" htmlFor="bespoke-name" error={errors.name}>
+                <Field label="Full Name *" htmlFor="bespoke-name" error={errors.name}>
                   <input
                     id="bespoke-name"
                     className="field-input"
@@ -244,9 +250,10 @@ export function Bespoke() {
                     value={form.name}
                     onChange={set("name")}
                     aria-invalid={!!errors.name}
+                    aria-required="true"
                   />
                 </Field>
-                <Field label="Email Address" htmlFor="bespoke-email" error={errors.email}>
+                <Field label="Email Address *" htmlFor="bespoke-email" error={errors.email}>
                   <input
                     id="bespoke-email"
                     type="email"
@@ -255,44 +262,78 @@ export function Bespoke() {
                     value={form.email}
                     onChange={set("email")}
                     aria-invalid={!!errors.email}
+                    aria-required="true"
                   />
                 </Field>
-                <Field label="Type of Object" htmlFor="bespoke-type" error={errors.type}>
+                <Field label="Type of Object *" htmlFor="bespoke-type" error={errors.type}>
                   <select
                     id="bespoke-type"
                     className="field-input"
                     value={form.type}
                     onChange={set("type")}
                     aria-invalid={!!errors.type}
+                    aria-required="true"
                   >
                     <option value="">Please select</option>
                     <option>Cup or tumbler</option>
-                    <option>Tea vessel</option>
+                    <option>Teapot or coffee pot</option>
                     <option>Bowl or dish</option>
-                    <option>Commemorative object</option>
-                    <option>Gift for an occasion</option>
                     <option>Other</option>
+                    <option>Not sure yet</option>
                   </select>
+                  {form.type === "Other" ? (
+                    <p className="mt-2 text-[12px] leading-relaxed text-muted">
+                      Please describe the object in “Tell us about your piece” below.
+                    </p>
+                  ) : null}
                 </Field>
-                <Field label="Preferred Material" htmlFor="bespoke-material" optional>
-                  <select
-                    id="bespoke-material"
+                <Field label="Approximate Budget (£)" htmlFor="bespoke-budget" optional>
+                  <input
+                    id="bespoke-budget"
+                    type="text"
+                    inputMode="decimal"
                     className="field-input"
-                    value={form.material}
-                    onChange={set("material")}
-                  >
-                    <option value="">No preference / advise me</option>
-                    <option>Fine silver</option>
-                    <option>Sterling silver</option>
-                    <option>Other — described below</option>
-                  </select>
+                    value={form.budget}
+                    onChange={set("budget")}
+                    placeholder="e.g. 1,500"
+                  />
+                </Field>
+                <Field
+                  label="Delivery Country or Region *"
+                  htmlFor="bespoke-country"
+                  error={errors.country}
+                >
+                  <input
+                    id="bespoke-country"
+                    className="field-input"
+                    autoComplete="country-name"
+                    value={form.country}
+                    onChange={set("country")}
+                    aria-invalid={!!errors.country}
+                    aria-required="true"
+                  />
+                </Field>
+                <Field
+                  label="Preferred Delivery Date"
+                  htmlFor="bespoke-date"
+                  optional
+                  hint="Subject to confirmation."
+                >
+                  <input
+                    id="bespoke-date"
+                    type="date"
+                    className="field-input"
+                    value={form.date}
+                    onChange={set("date")}
+                    min={new Date().toISOString().slice(0, 10)}
+                  />
                 </Field>
                 <div className="md:col-span-2">
                   <Field
-                    label="Description of Idea"
+                    label="Tell us about your piece *"
                     htmlFor="bespoke-description"
                     error={errors.description}
-                    hint="Purpose, approximate size, finish, occasion — anything that helps."
+                    hint="Intended use, approximate size, finish and any personal details."
                   >
                     <textarea
                       id="bespoke-description"
@@ -301,6 +342,7 @@ export function Bespoke() {
                       value={form.description}
                       onChange={set("description")}
                       aria-invalid={!!errors.description}
+                      aria-required="true"
                     />
                   </Field>
                 </div>
@@ -314,21 +356,6 @@ export function Bespoke() {
                     value={form.quantity}
                     onChange={set("quantity")}
                     placeholder="e.g. 2"
-                  />
-                </Field>
-                <Field
-                  label="Desired Completion Date"
-                  htmlFor="bespoke-date"
-                  optional
-                  hint="Subject to confirmation."
-                >
-                  <input
-                    id="bespoke-date"
-                    type="date"
-                    className="field-input"
-                    value={form.date}
-                    onChange={set("date")}
-                    min={new Date().toISOString().slice(0, 10)}
                   />
                 </Field>
 
@@ -415,26 +442,29 @@ export function Bespoke() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <div className="border-l-2 border-taupe bg-ivory px-5 py-4 text-[13px] leading-relaxed text-muted">
-                    Bespoke enquiries are subject to feasibility, material availability, pricing and
-                    production time confirmation. Submitting an enquiry does not constitute an
-                    order. See our{" "}
+                  <p className="text-[13px] leading-relaxed text-muted">
+                    This is an enquiry only. See our{" "}
                     <Link to="/bespoke-terms" className="text-ink underline underline-offset-4">
                       Bespoke Terms
                     </Link>
                     .
-                  </div>
+                  </p>
                   <Button
                     type="submit"
                     loading={state === "loading"}
                     disabled={uploading}
-                    className="mt-7 w-full md:w-auto"
+                    className="mt-6 w-full md:w-auto"
                   >
                     {uploading ? "Uploading Images" : "Submit Enquiry"}
                   </Button>
                 </div>
               </form>
-            )}
+              <Img
+                src={IMG.sculptSet}
+                alt="Hand-hammered silver cups"
+                className="mt-10 aspect-[4/5] lg:hidden"
+              />
+            </>)}
           </div>
         </div>
       </section>

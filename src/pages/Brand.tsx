@@ -1,5 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { IMG } from "../data/images";
+import dealersNotice from "@/assets/images/hallmark-dealers-notice.webp";
+import dealersNoticeFull from "@/assets/images/hallmark-dealers-notice.png";
 import {
   Accordion,
   Button,
@@ -13,9 +15,9 @@ import {
   TextLink,
   isEmail,
 } from "../components/ui";
-import { CheckIcon, DocIcon, ExternalIcon } from "../components/Icons";
+import { CheckIcon, CloseIcon, DocIcon, ExternalIcon } from "../components/Icons";
 import { ImageUpload, type UploadedImage } from "../components/ImageUpload";
-import { Link } from "../lib/router";
+import { Link, useRoute } from "../lib/router";
 import { cx } from "../lib/format";
 
 /* ================= Care Guide ================= */
@@ -278,12 +280,17 @@ export function FAQ() {
 
 /* ================= Contact ================= */
 export function Contact() {
+  const { query } = useRoute();
+  const piece = query.get("piece");
+  const sku = query.get("sku");
   const [f, setF] = useState({
     name: "",
     email: "",
     order: "",
-    subject: "General enquiry",
-    message: "",
+    subject: piece ? "Product information" : "General enquiry",
+    message: piece
+      ? `I’d like advice on sizing for ${piece}${sku ? ` (SKU: ${sku})` : ""}. My usual ring size is —`
+      : "",
     reference: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -474,6 +481,19 @@ export function Contact() {
 
 /* ================= UK Hallmarking ================= */
 export function Hallmarking() {
+  const [noticeOpen, setNoticeOpen] = useState(false);
+
+  useEffect(() => {
+    if (!noticeOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setNoticeOpen(false);
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [noticeOpen]);
+
   return (
     <>
       <PageIntro eyebrow="Client Care" title="UK Hallmarking for Objects">
@@ -510,10 +530,13 @@ export function Hallmarking() {
           <section>
             <h2 className="display text-3xl md:text-4xl">Argent Lune objects</h2>
             <p className="body-copy mt-5">
-              The hallmarking status of each silver object is listed on its product page.{" "}
-              <Placeholder>
-                Argent Lune hallmarking statement, sponsor’s mark and Assay Office to be confirmed
-              </Placeholder>
+              Each silver object collection will be submitted to a UK Assay Office for independent
+              testing and hallmarking before dispatch to the customer. A hallmark provides
+              independent verification of the metal’s fineness.
+            </p>
+            <p className="body-copy mt-4">
+              Please refer to the official British Hallmarking Council Dealer’s Notice in the panel
+              below for further information.
             </p>
           </section>
           <section>
@@ -521,6 +544,10 @@ export function Hallmarking() {
             <ul className="mt-6 space-y-3">
               {[
                 ["The Assay Office London", "https://www.assayofficelondon.co.uk/"],
+                [
+                  "Assay Office London — hallmarking downloads",
+                  "https://www.assayofficelondon.co.uk/downloads",
+                ],
                 [
                   "British Hallmarking Council",
                   "https://www.gov.uk/government/organisations/british-hallmarking-council",
@@ -536,24 +563,92 @@ export function Hallmarking() {
           </section>
         </div>
         <aside className="lg:col-span-4 lg:col-start-9">
-          <div className="border border-line bg-white p-8 lg:sticky lg:top-[120px]">
+          <div className="border border-line bg-white p-5 md:p-6 lg:sticky lg:top-[120px]">
             <DocIcon size={28} />
-            <p className="eyebrow mt-6">Official Document</p>
-            <h2 className="heading mt-3 text-2xl">Hallmarking Certificate</h2>
-            <div className="mt-6 flex aspect-[3/4] items-center justify-center border border-dashed border-taupe bg-stone p-6 text-center">
-              <p className="text-[13px] italic text-muted">
-                Official hallmarking document (PDF) to be uploaded
-              </p>
-            </div>
-            <Button full disabled className="mt-6">
-              Download PDF
+            <p className="eyebrow mt-5">Official Document</p>
+            <h2 className="heading mt-2 text-2xl">Dealers' Notice</h2>
+            <button
+              type="button"
+              onClick={() => setNoticeOpen(true)}
+              className="group relative mt-5 block w-full cursor-pointer overflow-hidden border border-line"
+              aria-label="Enlarge the Dealers' Notice"
+            >
+              <img
+                src={dealersNotice}
+                alt="Official British Hallmarking Council Dealers' Notice: Look for the Hallmark, It's Your Guarantee"
+                className="w-full"
+              />
+              <span className="absolute inset-0 flex items-end justify-center bg-ink/0 p-3 opacity-0 transition group-hover:bg-ink/15 group-hover:opacity-100">
+                <span className="bg-ivory px-3 py-1.5 text-[10px] font-medium tracking-[0.16em] uppercase">
+                  Click to enlarge
+                </span>
+              </span>
+            </button>
+            <Button full className="mt-4" onClick={() => setNoticeOpen(true)}>
+              View Dealers' Notice
             </Button>
+            <a
+              href={dealersNoticeFull}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="link-line mt-4"
+            >
+              Open full size <ExternalIcon size={12} />
+            </a>
             <p className="mt-3 text-[12px] text-muted">
-              Available once the document has been provided.
+              Click the notice to enlarge the small print. The official file opens in a new tab for
+              closer reading on mobile.
             </p>
           </div>
         </aside>
       </div>
+
+      {noticeOpen ? (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Dealers' Notice"
+        >
+          <div
+            className="absolute inset-0 animate-fade-in bg-ink/60"
+            onClick={() => setNoticeOpen(false)}
+          />
+          <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col bg-ivory shadow-xl">
+            <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-3">
+              <p className="eyebrow">Dealers' Notice</p>
+              <div className="flex items-center gap-4">
+                <a
+                  href={dealersNoticeFull}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-[11px] tracking-[0.14em] uppercase underline underline-offset-4"
+                >
+                  Open full size
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setNoticeOpen(false)}
+                  aria-label="Close Dealers' Notice"
+                  className="-mr-1 cursor-pointer p-1"
+                >
+                  <CloseIcon size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1 overflow-auto bg-stone p-2 sm:p-4">
+              <img
+                src={dealersNoticeFull}
+                alt="Official British Hallmarking Council Dealers' Notice: Look for the Hallmark, It's Your Guarantee"
+                className="mx-auto block w-[900px] max-w-none sm:w-full sm:max-w-full"
+              />
+            </div>
+            <p className="border-t border-line px-4 py-2 text-[11px] text-muted sm:hidden">
+              Scroll sideways and zoom to read the full notice.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

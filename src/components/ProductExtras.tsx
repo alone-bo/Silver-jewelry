@@ -313,99 +313,23 @@ function ReviewDialog({ productName, onClose }: { productName: string; onClose: 
   );
 }
 
-/* ---------- Customer reviews (structure only — no fabricated reviews or ratings) ---------- */
+/* ---------- Customer reviews — honest empty state until real reviews exist ---------- */
 export function CustomerReviews({ product }: { product: Product }) {
   const [open, setOpen] = useState(false);
   return (
     <section aria-labelledby="pdp-reviews" className="border-t border-line bg-stone">
-      <div className="container-lune py-20 md:py-24">
-        <div className="grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <h2 id="pdp-reviews" className="display text-4xl md:text-5xl">
-              Customer Reviews
-            </h2>
-            <div className="mt-8 flex items-end gap-4">
-              <span className="display text-6xl leading-none text-muted">—</span>
-              <div className="pb-1">
-                <Stars value={0} size={18} />
-                <p className="mt-1 text-[13px] text-muted">
-                  Based on <Placeholder>review count</Placeholder> reviews
-                </p>
-              </div>
-            </div>
-            <ul className="mt-8 space-y-2" aria-label="Rating breakdown">
-              {[5, 4, 3, 2, 1].map((n) => (
-                <li key={n} className="flex items-center gap-3 text-[12px] text-muted">
-                  <span className="w-10">{n} star</span>
-                  <span className="h-1 flex-1 bg-line" />
-                  <span className="w-6 text-right">—</span>
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant="secondary"
-              className="mt-10 w-full sm:w-auto"
-              onClick={() => setOpen(true)}
-            >
-              Write a Review
-            </Button>
-          </div>
-
-          <div className="lg:col-span-8">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-[13px] text-muted">
-                Verified reviews will appear here once collected. Layout shown with placeholders.
-              </p>
-              <label className="flex items-center gap-2 text-[12px] text-muted">
-                Sort
-                <select
-                  disabled
-                  className="bg-transparent text-[11px] font-medium tracking-[0.14em] uppercase"
-                >
-                  <option>Most Recent</option>
-                </select>
-              </label>
-            </div>
-            <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {[0, 1, 2].map((i) => (
-                <li
-                  key={i}
-                  className="flex flex-col border border-dashed border-taupe bg-ivory p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <Stars value={0} size={14} />
-                    <span className="text-[12px] italic text-muted">[Review date]</span>
-                  </div>
-                  <p className="heading mt-4 text-xl text-muted">[Review title]</p>
-                  <div className="mt-3 space-y-2" aria-hidden>
-                    <div className="h-2 w-full bg-line" />
-                    <div className="h-2 w-11/12 bg-line" />
-                    <div className="h-2 w-2/3 bg-line" />
-                  </div>
-                  <p className="sr-only">Review content placeholder</p>
-                  {i === 0 ? (
-                    <div className="mt-5 grid grid-cols-3 gap-2">
-                      {[0, 1].map((k) => (
-                        <div
-                          key={k}
-                          className="flex aspect-square items-center justify-center border border-dashed border-taupe bg-stone text-[10px] text-muted"
-                        >
-                          Photo
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div className="flex-1" />
-                  <div className="mt-6 flex items-center gap-3 border-t border-line pt-5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone text-[11px] text-muted">
-                      —
-                    </span>
-                    <span className="text-[13px] italic text-muted">[Customer name]</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+      <div className="container-lune py-16 md:py-24">
+        <div className="mx-auto max-w-2xl text-center">
+          <Eyebrow className="mb-5">Customer Reviews</Eyebrow>
+          <h2 id="pdp-reviews" className="display text-4xl md:text-5xl">
+            No reviews yet
+          </h2>
+          <p className="body-copy mx-auto mt-5 max-w-md">
+            Be the first to share your thoughts on {product.name}.
+          </p>
+          <Button variant="secondary" className="mt-8" onClick={() => setOpen(true)}>
+            Write a Review
+          </Button>
         </div>
       </div>
       {open ? <ReviewDialog productName={product.name} onClose={() => setOpen(false)} /> : null}

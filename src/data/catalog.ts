@@ -45,6 +45,7 @@ export type CollectionHandle =
 export type Product = {
   handle: string;
   name: string;
+  sku: string;
   kind: "jewellery" | "object";
   collection: CollectionHandle;
   category: string;
@@ -62,6 +63,11 @@ export type Product = {
   craftsmanship: string;
   care: string;
   objectSpecs?: ObjectSpecs;
+  /** Objects: how the piece is sold, e.g. as a pair or a single set */
+  soldAsPair?: boolean;
+  salesMethod?: string;
+  /** Objects: making, hallmarking and dispatch timing */
+  leadTime?: string;
   /** Links the card to another page instead of the product template (e.g. bespoke enquiries) */
   href?: string;
   isNew?: boolean;
@@ -172,7 +178,8 @@ export const products: Product[] = [
   // — Materia
   {
     handle: "materia-molten-ring",
-    name: "Materia Molten Ring",
+    name: "Materia - Molten Ring",
+    sku: "AL011",
     kind: "jewellery",
     collection: "materia",
     category: "Rings",
@@ -201,7 +208,8 @@ export const products: Product[] = [
   },
   {
     handle: "materia-hammered-band",
-    name: "Materia Hammered Band",
+    name: "Materia - Hammered Band",
+    sku: "AL012",
     kind: "jewellery",
     collection: "materia",
     category: "Rings",
@@ -227,7 +235,8 @@ export const products: Product[] = [
   },
   {
     handle: "materia-texture-pendant",
-    name: "Materia Texture Pendant",
+    name: "Materia - Texture Pendant",
+    sku: "AL013",
     kind: "jewellery",
     collection: "materia",
     category: "Necklaces",
@@ -251,7 +260,8 @@ export const products: Product[] = [
   },
   {
     handle: "materia-signet-ring",
-    name: "Materia Signet Ring",
+    name: "Materia - Signet Ring",
+    sku: "AL014",
     kind: "jewellery",
     collection: "materia",
     category: "Rings",
@@ -274,7 +284,8 @@ export const products: Product[] = [
   // — Botanica
   {
     handle: "botanica-branch-pendant",
-    name: "Botanica Branch Pendant",
+    name: "Botanica - Branch Pendant",
+    sku: "AL015",
     kind: "jewellery",
     collection: "botanica",
     category: "Necklaces",
@@ -299,7 +310,8 @@ export const products: Product[] = [
   },
   {
     handle: "botanica-leaf-ring",
-    name: "Botanica Leaf Ring",
+    name: "Botanica - Leaf Ring",
+    sku: "AL016",
     kind: "jewellery",
     collection: "botanica",
     category: "Rings",
@@ -321,7 +333,8 @@ export const products: Product[] = [
   },
   {
     handle: "botanica-twig-earrings",
-    name: "Botanica Twig Earrings",
+    name: "Botanica - Twig Earrings",
+    sku: "AL017",
     kind: "jewellery",
     collection: "botanica",
     category: "Earrings",
@@ -343,7 +356,8 @@ export const products: Product[] = [
   },
   {
     handle: "botanica-fern-necklace",
-    name: "Botanica Fern Necklace",
+    name: "Botanica - Fern Necklace",
+    sku: "AL018",
     kind: "jewellery",
     collection: "botanica",
     category: "Necklaces",
@@ -367,7 +381,8 @@ export const products: Product[] = [
   // — Papillon
   {
     handle: "papillon-chain-bracelet",
-    name: "Papillon Chain Bracelet",
+    name: "Papillon - Chain Bracelet",
+    sku: "AL019",
     kind: "jewellery",
     collection: "papillon",
     category: "Bracelets",
@@ -409,7 +424,8 @@ export const products: Product[] = [
   },
   {
     handle: "papillon-pearl-ring",
-    name: "Papillon Pearl Ring",
+    name: "Papillon - Pearl Ring",
+    sku: "AL020",
     kind: "jewellery",
     collection: "papillon",
     category: "Rings",
@@ -444,7 +460,8 @@ export const products: Product[] = [
   },
   {
     handle: "papillon-pendant-necklace",
-    name: "Papillon Pendant Necklace",
+    name: "Papillon - Pendant Necklace",
+    sku: "AL021",
     kind: "jewellery",
     collection: "papillon",
     category: "Necklaces",
@@ -480,7 +497,8 @@ export const products: Product[] = [
   },
   {
     handle: "papillon-drop-earrings",
-    name: "Papillon Drop Earrings",
+    name: "Papillon - Drop Earrings",
+    sku: "AL022",
     kind: "jewellery",
     collection: "papillon",
     category: "Earrings",
@@ -503,7 +521,8 @@ export const products: Product[] = [
   // — Miniature Silverware
   {
     handle: "miniature-wine-cup-pendant",
-    name: "Miniature Wine Cup Pendant",
+    name: "Miniature Silverware - Wine Cup Pendant",
+    sku: "AL023",
     kind: "jewellery",
     collection: "miniature-silverware",
     category: "Pendants",
@@ -527,7 +546,8 @@ export const products: Product[] = [
   },
   {
     handle: "miniature-tumbler-pendant",
-    name: "Miniature Tumbler Pendant",
+    name: "Miniature Silverware - Tumbler Pendant",
+    sku: "AL024",
     kind: "jewellery",
     collection: "miniature-silverware",
     category: "Pendants",
@@ -549,7 +569,8 @@ export const products: Product[] = [
   },
   {
     handle: "miniature-goblet-pendant",
-    name: "Miniature Goblet Pendant",
+    name: "Miniature Silverware - Goblet Pendant",
+    sku: "AL025",
     kind: "jewellery",
     collection: "miniature-silverware",
     category: "Pendants",
@@ -572,7 +593,8 @@ export const products: Product[] = [
   // — Objects
   {
     handle: "sculpt-hand-hammered-fine-silver-cups",
-    name: "Sculpt — Hand-Hammered Fine Silver Cups | Set of Two",
+    name: "Sculpt - Hand-Hammered Fine Silver Cups | Set of Two",
+    sku: "AL031",
     kind: "object",
     collection: "objects",
     category: "Cups",
@@ -595,13 +617,18 @@ export const products: Product[] = [
     craftsmanship:
       "Hand-hammered using traditional silversmithing techniques. Every cup is unique.",
     care: "Hand wash in warm water with a mild detergent and dry immediately with a soft cloth. Not dishwasher safe. See Silver Objects in the Care Guide.",
+    soldAsPair: true,
+    salesMethod: "Sold as a pair — one set available in the first release.",
+    leadTime:
+      "Made and hallmarked to order. The dispatch date is confirmed after your order is placed.",
     objectSpecs: {
       dimensions: TBC,
-      capacity: TBC,
-      weight: TBC,
-      hallmarking: `${TBC} — see UK Hallmarking for Objects`,
-      dispatch: TBC,
-      material: `Fine silver · Purity: ${TBC}`,
+      capacity: "Approx. 280 ml per cup",
+      weight: "Approx. 133 g per cup · approx. 266 g per pair",
+      hallmarking:
+        "Submitted to a UK Assay Office for independent testing and hallmarking before dispatch.",
+      dispatch: "Hallmarked to order — dispatch date confirmed after your order.",
+      material: "999 fine silver",
     },
     isNew: true,
     order: 1,
@@ -609,6 +636,7 @@ export const products: Product[] = [
   {
     handle: "bespoke-silver-object",
     name: "Bespoke Silver Object",
+    sku: "AL032",
     kind: "object",
     collection: "objects",
     category: "Bespoke",

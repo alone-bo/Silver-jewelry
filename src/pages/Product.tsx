@@ -13,7 +13,8 @@ import { useCart } from "../store/cart";
 import { Link } from "../lib/router";
 import { cx, formatPrice } from "../lib/format";
 import { ProductCard } from "../components/ProductCard";
-import { CustomerReviews, ProductFAQ } from "../components/ProductExtras";
+import { CustomerReviews } from "../components/ProductExtras";
+import { RingSizeFit, type RingFit } from "../components/RingSizeFit";
 import {
   Accordion,
   Button,
@@ -31,7 +32,6 @@ import {
   CheckIcon,
   ChevronLeft,
   ChevronRight,
-  CloseIcon,
   FlameIcon,
   InfoIcon,
 } from "../components/Icons";
@@ -161,13 +161,11 @@ function OptionSelector({
   option,
   value,
   onChange,
-  onSizeGuide,
   showError,
 }: {
   option: ProductOption;
   value: string | undefined;
   onChange: (v: string) => void;
-  onSizeGuide: () => void;
   showError: boolean;
 }) {
   const groups =
@@ -181,15 +179,6 @@ function OptionSelector({
             {value ? value.replace(/^.*· /, "") : option.required ? "Please select" : ""}
           </span>
         </legend>
-        {option.helper ? (
-          <button
-            type="button"
-            onClick={onSizeGuide}
-            className="cursor-pointer text-[12px] text-muted underline underline-offset-4 hover:text-deep"
-          >
-            {option.helper}
-          </button>
-        ) : null}
       </div>
       {groups.map((g) => (
         <div key={g} className={cx(g && "mt-3 first-of-type:mt-0")}>
@@ -251,60 +240,6 @@ function OptionSelector({
         </p>
       ) : null}
     </fieldset>
-  );
-}
-
-function SizeGuide({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", k);
-    return () => window.removeEventListener("keydown", k);
-  }, [onClose]);
-  return (
-    <div
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Size guide"
-    >
-      <div className="absolute inset-0 animate-fade-in bg-ink/40" onClick={onClose} />
-      <div className="relative w-full max-w-lg animate-drop bg-ivory p-8 md:p-10">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close size guide"
-          className="absolute right-4 top-4 cursor-pointer p-2"
-        >
-          <CloseIcon size={20} />
-        </button>
-        <h2 className="heading text-3xl">Ring Size Guide</h2>
-        <p className="body-copy mt-4">
-          Our rings are offered in UK letter sizes, grouped into women’s and men’s ranges for
-          clarity. Any size can be chosen by anyone.
-        </p>
-        <table className="mt-6 w-full text-left text-[14px]">
-          <thead>
-            <tr className="border-b border-ink">
-              <th className="py-2 font-medium">UK size</th>
-              <th className="py-2 font-medium">Inside diameter</th>
-              <th className="py-2 font-medium">Circumference</th>
-            </tr>
-          </thead>
-          <tbody className="text-muted">
-            {["J", "L", "N", "R", "T", "V"].map((s) => (
-              <tr key={s} className="border-b border-line">
-                <td className="py-2.5 text-ink">UK {s}</td>
-                <td className="py-2.5">{TBC}</td>
-                <td className="py-2.5">{TBC}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="mt-5 text-[12px] text-muted">
-          Measurements to be confirmed against Argent Lune’s ring mandrels.
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -403,7 +338,9 @@ export function ProductPage({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [state, setState] = useState<"idle" | "loading" | "added">("idle");
   const [attempted, setAttempted] = useState(false);
-  const [sizeGuide, setSizeGuide] = useState(false);
+  const [ringFit, setRingFit] = useState<RingFit>("");
+  const [relatedTab, setRelatedTab] = useState<"like" | "recent">("like");
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     setSelected(initial());
@@ -411,7 +348,32 @@ export function ProductPage({ product }: { product: Product }) {
     setQty(1);
     setState("idle");
     setAttempted(false);
+    setRingFit("");
+    setRelatedTab("like");
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.handle]);
+
+  useEffect(() => {
+    const key = "argent-lune-recently-viewed";
+    let stored: string[] = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) ?? "[]");
+      if (Array.isArray(parsed)) stored = parsed.filter((h): h is string => typeof h === "string");
+    } catch {
+      stored = [];
+    }
+    const others = [...new Set(stored.filter((h) => h !== product.handle))];
+    try {
+      localStorage.setItem(key, JSON.stringify([product.handle, ...others].slice(0, 8)));
+    } catch {
+      /* storage unavailable */
+    }
+    setRecentProducts(
+      others
+        .map((h) => products.find((p) => p.handle === h))
+        .filter((p): p is Product => Boolean(p))
+        .slice(0, 4),
+    );
   }, [product.handle]);
 
   const heatSelected = useMemo(
@@ -421,7 +383,16 @@ export function ProductPage({ product }: { product: Product }) {
       ),
     [product, selected],
   );
-  const missing = product.options.filter((o) => !selected[o.name]);
+  const hasHeatColour = product.options.some((o) => o.values.some((v) => v.heatColoured));
+  const careText = product.care.toLowerCase();
+  const hasDelicateMaterials =
+    ["enamel", "pearl", "gemstone"].some((m) => careText.includes(m)) ||
+    product.collection === "papillon";
+  const sizeOption = !isObject ? product.options.find((o) => o.name === "Size") : undefined;
+  const otherOptions = product.options.filter((o) => o !== sizeOption);
+  const hasMensFit = Boolean(sizeOption?.values.some((v) => v.group === "Men's"));
+  const missingOptions = otherOptions.filter((o) => !selected[o.name]);
+  const missingSize = Boolean(sizeOption) && !ringFit;
   const purchasable = isPurchasable(product);
   const maxQty = product.stock === "low" ? (product.stockCount ?? 1) : 10;
   const collection = getCollection(product.collection);
@@ -434,9 +405,16 @@ export function ProductPage({ product }: { product: Product }) {
 
   const onAdd = async () => {
     setAttempted(true);
-    if (missing.length) return;
+    if (missingOptions.length || missingSize) return;
     setState("loading");
-    await add(product, selected, qty, heatSelected);
+    const cartOptions =
+      sizeOption && ringFit
+        ? {
+            ...selected,
+            Size: ringFit === "women" ? "Standard Size for Women" : "Standard Size for Men",
+          }
+        : selected;
+    await add(product, cartOptions, qty, heatSelected);
     setState("added");
     setTimeout(() => setState("idle"), 2200);
   };
@@ -455,8 +433,8 @@ export function ProductPage({ product }: { product: Product }) {
       ? "Adding to Bag"
       : state === "added"
         ? "Added to Bag"
-        : missing.length && attempted
-          ? `Select ${missing[0].name}`
+        : missingOptions.length && attempted
+          ? `Select ${missingOptions[0].name}`
           : "Add to Bag";
 
   return (
@@ -491,7 +469,7 @@ export function ProductPage({ product }: { product: Product }) {
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-[108px]">
             <Eyebrow>
-              {isObject ? "Silver Objects" : collection?.title} · {product.category}
+              {product.category} · SKU:{product.sku}
             </Eyebrow>
             <h1 className="heading mt-4 text-4xl leading-[1.05] md:text-5xl">{product.name}</h1>
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -509,25 +487,38 @@ export function ProductPage({ product }: { product: Product }) {
                 className="text-[13px]"
               />
             </div>
+            {product.soldAsPair ? (
+              <p className="mt-4 inline-flex items-center border border-deep px-2.5 py-1 text-[10px] font-medium tracking-[0.16em] text-deep uppercase">
+                Sold as a pair · Set of Two
+              </p>
+            ) : null}
             <p className="body-copy mt-6">{product.summary}</p>
 
-            {/* Variants */}
-            {product.options.length ? (
+            {/* Finish / other variants */}
+            {otherOptions.length ? (
               <div className="mt-4 divide-y divide-line border-y border-line">
-                {product.options.map((o) => (
+                {otherOptions.map((o) => (
                   <OptionSelector
                     key={o.name}
                     option={o}
                     value={selected[o.name]}
                     onChange={(v) => choose(o, v)}
-                    onSizeGuide={() => setSizeGuide(true)}
                     showError={attempted}
                   />
                 ))}
               </div>
-            ) : (
-              <div className="mt-6 border-t border-line" />
-            )}
+            ) : null}
+
+            {/* Ring size & fit */}
+            {sizeOption ? (
+              <RingSizeFit
+                productName={product.name}
+                sku={product.sku}
+                hasMens={hasMensFit}
+                value={ringFit}
+                onChange={setRingFit}
+              />
+            ) : null}
 
             {/* Object specs — always visible for objects */}
             {isObject && product.objectSpecs ? (
@@ -549,6 +540,27 @@ export function ProductPage({ product }: { product: Product }) {
                 </p>
               ) : null}
 
+              {isObject && product.salesMethod ? (
+                <div className="rounded-xl border border-line bg-white px-5 py-4">
+                  {product.soldAsPair ? (
+                    <p className="eyebrow text-[10px] text-deep">Set of Two</p>
+                  ) : null}
+                  <p className="mt-1 text-[13px] leading-relaxed text-ink">
+                    {product.salesMethod}
+                  </p>
+                  {product.leadTime ? (
+                    <>
+                      <p className="mt-3 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
+                        Lead time
+                      </p>
+                      <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                        {product.leadTime}
+                      </p>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+
               {/* Colour Finish Notice: visible, directly above Add to Cart, only when heat-coloured is selected */}
               {heatSelected && purchasable ? (
                 <div
@@ -560,25 +572,24 @@ export function ProductPage({ product }: { product: Product }) {
                     <FlameIcon size={16} /> Colour Finish Notice
                   </p>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted">
-                    Heat-coloured silver gains its tones through controlled heating, so every piece
-                    is unique and its colour will differ from the images shown. The finish may
-                    gradually change with wear and handling. Please read the{" "}
+                    This piece features a heat-coloured finish that may fade or change with time and
+                    wear. Please review the{" "}
                     <Link to="/care" className="text-ink underline underline-offset-4">
-                      Heat-Coloured Silver care notes
+                      Colour &amp; Care information
                     </Link>{" "}
-                    before ordering.
+                    before purchasing.
                   </p>
                 </div>
               ) : null}
 
               {purchasable ? (
-                <div className="flex flex-col gap-3 sm:flex-row">
+                <div className={cx("flex flex-col gap-3", !sizeOption && "sm:flex-row")}>
                   <QuantitySelector value={qty} onChange={setQty} max={maxQty} />
                   <Button
                     onClick={onAdd}
                     loading={state === "loading"}
-                    className={cx("flex-1", state === "added" && "!bg-deep")}
-                    aria-describedby={heatSelected ? "heat-ack" : undefined}
+                    disabled={missingSize}
+                    className={cx(sizeOption ? "w-full" : "flex-1", state === "added" && "!bg-deep")}
                   >
                     {state === "added" ? (
                       <CheckIcon size={16} className="-ml-2 mr-1 inline" />
@@ -605,10 +616,8 @@ export function ProductPage({ product }: { product: Product }) {
                   Enquire About a Commission
                 </ButtonLink>
               )}
-              {heatSelected && purchasable ? (
-                <p id="heat-ack" className="text-[12px] text-muted">
-                  By adding this piece you acknowledge the colour finish notice above.
-                </p>
+              {missingSize ? (
+                <p className="text-[12px] text-muted">Select a size above to continue.</p>
               ) : null}
 
               <p className="flex items-start gap-2 text-[12px] leading-relaxed text-muted">
@@ -618,9 +627,19 @@ export function ProductPage({ product }: { product: Product }) {
               </p>
             </div>
 
+            {sizeOption ? (
+              <div className="mt-6 rounded-xl bg-stone px-5 py-4">
+                <p className="text-[13px] font-medium">Sizing Note</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                  Please adjust gently and avoid repeated bending to preserve the ring’s original
+                  shape.
+                </p>
+              </div>
+            ) : null}
+
             {/* Details accordions */}
             <div className="mt-8 border-t border-line">
-              <Accordion title="Description" defaultOpen>
+              <Accordion title="Design Story" defaultOpen>
                 {product.description.map((d) => (
                   <p key={d} className="mb-3 last:mb-0">
                     {d}
@@ -632,25 +651,67 @@ export function ProductPage({ product }: { product: Product }) {
                   <Detail value={product.material} />
                 </p>
               </Accordion>
-              {!isObject ? (
-                <>
-                  <Accordion title="Size & Fit">
+              {isObject ? (
+                <Accordion title="UK Hallmarking for our objects">
+                  <div className="space-y-3">
                     <p>
-                      <Detail value={product.sizeFit ?? TBC} />
+                      Each silver object collection will be submitted to a UK Assay Office for
+                      independent testing and hallmarking before dispatch to the customer.
                     </p>
-                  </Accordion>
-                  <Accordion title="Total Weight">
                     <p>
-                      <Detail value={product.weight} />
+                      In the UK, qualifying precious metal objects are required by law to carry a
+                      recognised hallmark. A hallmark provides independent verification of the
+                      metal’s fineness.
                     </p>
-                  </Accordion>
-                </>
+                    <p>
+                      Please refer to the official British Hallmarking Council Dealer’s Notice on our
+                      UK Hallmarking page for further information.
+                    </p>
+                  </div>
+                  <TextLink to="/hallmarking" className="mt-4 text-ink">
+                    Learn more about UK Hallmarking for Objects
+                  </TextLink>
+                </Accordion>
               ) : null}
               <Accordion title="Craftsmanship">
                 <p>{product.craftsmanship}</p>
               </Accordion>
               <Accordion title="Care">
-                <p>{product.care}</p>
+                <div className="space-y-4">
+                  <p>{product.care}</p>
+                  {hasHeatColour ? (
+                    <div>
+                      <p className="text-[13px] font-medium text-ink">Heat-Coloured Silver</p>
+                      <p className="mt-1">
+                        Certain Argent Lune pieces feature colours created through a specialised
+                        heat-colouring process. These colours are not permanent and may gradually
+                        fade, change or wear away over time, particularly through regular wear,
+                        friction and handling.
+                      </p>
+                      <p className="mt-2">
+                        To help preserve the finish, store these pieces separately in a suitable
+                        sealed bag when not in use. Avoid frequent wiping, rubbing, polishing and the
+                        use of silver-cleaning solutions on coloured surfaces. The original colour
+                        and finish cannot be guaranteed to remain unchanged.
+                      </p>
+                    </div>
+                  ) : null}
+                  {hasDelicateMaterials ? (
+                    <div>
+                      <p className="text-[13px] font-medium text-ink">
+                        Enamel, Pearls &amp; Gemstones
+                      </p>
+                      <p className="mt-1">
+                        Pieces featuring enamel, freshwater pearls or gemstones require extra care.
+                        Avoid impact, prolonged moisture exposure, harsh chemicals, abrasive cleaning
+                        products and ultrasonic cleaners unless specifically approved for the piece.
+                        Gently clean with a soft, dry cloth. Do not apply silver-polishing products
+                        directly to enamel, pearls or gemstones unless the product’s care
+                        instructions expressly permit it.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
                 <TextLink to="/care" className="mt-4 text-ink">
                   Care Guide
                 </TextLink>
@@ -665,7 +726,11 @@ export function ProductPage({ product }: { product: Product }) {
                   <Link to="/returns" className="text-ink underline underline-offset-4">
                     Returns
                   </Link>{" "}
-                  pages.
+                  pages. For common questions, see our{" "}
+                  <Link to="/faq" className="text-ink underline underline-offset-4">
+                    FAQ
+                  </Link>
+                  .
                 </p>
               </Accordion>
             </div>
@@ -673,13 +738,8 @@ export function ProductPage({ product }: { product: Product }) {
         </div>
       </section>
 
-      {/* FAQ + Customer Reviews */}
-      {product.stock !== "enquire" ? (
-        <>
-          <ProductFAQ product={product} />
-          <CustomerReviews product={product} />
-        </>
-      ) : null}
+      {/* Customer Reviews */}
+      {product.stock !== "enquire" ? <CustomerReviews product={product} /> : null}
 
       {/* Editorial band */}
       {isObject ? (
@@ -703,48 +763,82 @@ export function ProductPage({ product }: { product: Product }) {
                   Discover Our Craft
                 </ButtonLink>
                 <ButtonLink to="/hallmarking" variant="outline-light">
-                  UK Hallmarking
+                  Learn more about UK Hallmarking for Objects
                 </ButtonLink>
               </div>
             </div>
           </div>
         </section>
-      ) : (
-        <section className="border-t border-line bg-stone">
-          <div className="container-lune grid items-center gap-10 py-20 md:grid-cols-2 md:py-28">
-            <Img
-              src={IMG.handsTool}
-              alt="A silversmith shaping a ring at the bench"
-              className="aspect-[5/4]"
-            />
-            <div className="md:pl-10">
-              <Eyebrow className="mb-6">Made by Hand</Eyebrow>
-              <h2 className="display text-4xl md:text-6xl">Noticed in the details.</h2>
-              <p className="body-copy mt-6 max-w-md">
-                Every piece is shaped, refined and finished by hand. Small irregularities are
-                welcomed — they are what make the piece yours alone.
-              </p>
-              <TextLink to="/craft" className="mt-8">
-                Our Craft
-              </TextLink>
-            </div>
+      ) : null}
+
+      {/* Related creations */}
+      <section className="container-lune py-16 md:py-24">
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6 md:mb-12">
+          <h2 className="display text-4xl md:text-5xl">Related Creations</h2>
+          <div className="flex flex-wrap items-center gap-6" role="tablist" aria-label="Related creations">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={relatedTab === "like"}
+              onClick={() => setRelatedTab("like")}
+              className={cx(
+                "cursor-pointer border-b pb-1.5 text-[11px] font-medium tracking-[0.16em] uppercase transition-colors",
+                relatedTab === "like"
+                  ? "border-ink text-ink"
+                  : "border-transparent text-muted hover:text-deep",
+              )}
+            >
+              You may also like
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={relatedTab === "recent"}
+              onClick={() => setRelatedTab("recent")}
+              className={cx(
+                "cursor-pointer border-b pb-1.5 text-[11px] font-medium tracking-[0.16em] uppercase transition-colors",
+                relatedTab === "recent"
+                  ? "border-ink text-ink"
+                  : "border-transparent text-muted hover:text-deep",
+              )}
+            >
+              Recently viewed
+            </button>
           </div>
-        </section>
-      )}
-
-      {/* Related */}
-      <section className="container-lune py-20 md:py-28">
-        <h2 className="display mb-12 text-4xl md:text-5xl">You May Also Like</h2>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-6 lg:grid-cols-4">
-          {related.map((p, i) => (
-            <Reveal key={p.handle} delay={i * 80}>
-              <ProductCard product={p} />
-            </Reveal>
-          ))}
         </div>
-      </section>
 
-      {sizeGuide ? <SizeGuide onClose={() => setSizeGuide(false)} /> : null}
+        {relatedTab === "like" ? (
+          <div
+            role="tabpanel"
+            className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-6 lg:grid-cols-4"
+          >
+            {related.map((p, i) => (
+              <Reveal key={p.handle} delay={i * 80}>
+                <ProductCard product={p} />
+              </Reveal>
+            ))}
+          </div>
+        ) : recentProducts.length ? (
+          <div
+            role="tabpanel"
+            className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-6 lg:grid-cols-4"
+          >
+            {recentProducts.map((p, i) => (
+              <Reveal key={p.handle} delay={i * 80}>
+                <ProductCard product={p} />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <div role="tabpanel" className="border-y border-line py-12 text-center">
+            <p className="heading text-2xl">Nothing viewed yet</p>
+            <p className="body-copy mt-3">Pieces you open will appear here.</p>
+            <TextLink to="/jewellery" className="mt-6">
+              Explore Jewellery
+            </TextLink>
+          </div>
+        )}
+      </section>
     </>
   );
 }
