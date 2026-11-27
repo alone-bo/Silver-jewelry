@@ -228,14 +228,14 @@ export function DesignSystem() {
           </div>
         </Block>
 
-        <Block title="Accordion">
+        {/* <Block title="Accordion">
           <div className="max-w-xl border-t border-line">
             <Accordion title="Material & Details" defaultOpen>
               Accordion content uses body copy at 15px.
             </Accordion>
             <Accordion title="Care">Collapsed by default.</Accordion>
           </div>
-        </Block>
+        </Block> */}
 
         <Block title="Breakpoints & Grid">
           <ul className="grid gap-4 text-[14px] md:grid-cols-3">
