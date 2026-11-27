@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  cardsForAll,
   collections,
   getCollection,
   jewelleryCollections,
@@ -229,7 +230,9 @@ export function CollectionTemplate({
     setLoadingMore(false);
   };
 
-  const shown = filtered.slice(0, visible);
+  /** Each colourway / form gets its own card, even when it shares a product page. */
+  const cards = useMemo(() => cardsForAll(filtered), [filtered]);
+  const shown = cards.slice(0, visible);
 
   return (
     <>
@@ -369,7 +372,7 @@ export function CollectionTemplate({
           </div>
           <div className="flex items-center gap-4">
             <span className="hidden text-[12px] text-muted sm:inline" aria-live="polite">
-              {filtered.length} piece{filtered.length === 1 ? "" : "s"}
+              {cards.length} piece{cards.length === 1 ? "" : "s"}
             </span>
             <label className="flex items-center gap-2 text-[12px]">
               <span className="sr-only sm:not-sr-only text-muted">Sort</span>
@@ -414,9 +417,9 @@ export function CollectionTemplate({
 
         {shown.length ? (
           <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-6 md:gap-y-16 xl:grid-cols-4">
-            {shown.map((p, i) => (
-              <div key={p.handle}>
-                <ProductCard product={p} priority={i < 4} />
+            {shown.map(({ product, variant }, i) => (
+              <div key={`${product.handle}-${variant?.id ?? "base"}`}>
+                <ProductCard product={product} variant={variant} priority={i < 4} />
               </div>
             ))}
           </div>
@@ -441,15 +444,15 @@ export function CollectionTemplate({
           </div>
         )}
 
-        {filtered.length > visible ? (
+        {cards.length > visible ? (
           <div className="mt-16 flex flex-col items-center gap-4">
             <p className="text-[12px] text-muted">
-              Showing {shown.length} of {filtered.length}
+              Showing {shown.length} of {cards.length}
             </p>
             <div className="h-px w-40 bg-line">
               <div
                 className="h-px bg-ink transition-all"
-                style={{ width: `${(shown.length / filtered.length) * 100}%` }}
+                style={{ width: `${(shown.length / cards.length) * 100}%` }}
               />
             </div>
             <Button variant="secondary" onClick={loadMore} loading={loadingMore} className="mt-2">
@@ -458,7 +461,7 @@ export function CollectionTemplate({
           </div>
         ) : shown.length ? (
           <p className="mt-16 text-center text-[12px] text-muted">
-            Showing all {filtered.length} piece{filtered.length === 1 ? "" : "s"}
+            Showing all {cards.length} piece{cards.length === 1 ? "" : "s"}
           </p>
         ) : null}
       </section>

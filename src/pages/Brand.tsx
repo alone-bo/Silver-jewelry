@@ -173,21 +173,21 @@ const faqs: { group: string; items: [string, React.ReactNode][] }[] = [
       [
         "Where do you deliver and how long does it take?",
         <>
-          Delivery destinations, costs and timings are shown at checkout and on our{" "}
+          Delivery destinations, charges and estimated timings are set out in our{" "}
           <Link to="/shipping" className="text-ink underline underline-offset-4">
-            Shipping
-          </Link>{" "}
-          page.
+            Shipping &amp; Delivery policy
+          </Link>
+          .
         </>,
       ],
       [
         "Can I return a piece?",
         <>
-          Please see our{" "}
+          Eligibility, time limits and the return process are set out in our{" "}
           <Link to="/returns" className="text-ink underline underline-offset-4">
-            Returns & Refunds
-          </Link>{" "}
-          page for full details. Bespoke pieces are covered by our Bespoke Terms.
+            Returns &amp; Refunds policy
+          </Link>
+          . Bespoke pieces are covered by our Bespoke Terms.
         </>,
       ],
     ],
@@ -526,18 +526,6 @@ export function Hallmarking() {
                 </li>
               ))}
             </ul>
-          </section>
-          <section>
-            <h2 className="display text-3xl md:text-4xl">Argent Lune objects</h2>
-            <p className="body-copy mt-5">
-              Each silver object collection will be submitted to a UK Assay Office for independent
-              testing and hallmarking before dispatch to the customer. A hallmark provides
-              independent verification of the metal’s fineness.
-            </p>
-            <p className="body-copy mt-4">
-              Please refer to the official British Hallmarking Council Dealer’s Notice in the panel
-              below for further information.
-            </p>
           </section>
           <section>
             <h2 className="display text-3xl md:text-4xl">Further information</h2>

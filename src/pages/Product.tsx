@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   getCollection,
+  getVariant,
   isPurchasable,
   products,
+  skuFor,
+  stockFor,
   stockLabel,
   TBC,
   type Product,
@@ -10,7 +13,7 @@ import {
 } from "../data/catalog";
 import { IMG } from "../data/images";
 import { useCart } from "../store/cart";
-import { Link } from "../lib/router";
+import { Link, useRoute } from "../lib/router";
 import { cx, formatPrice } from "../lib/format";
 import { ProductCard } from "../components/ProductCard";
 import { CustomerReviews } from "../components/ProductExtras";
@@ -168,27 +171,20 @@ function OptionSelector({
   onChange: (v: string) => void;
   showError: boolean;
 }) {
-  const groups =
-    option.kind === "size" ? [...new Set(option.values.map((v) => v.group ?? ""))] : [""];
   return (
     <fieldset className="py-5">
       <div className="mb-3 flex items-baseline justify-between">
         <legend className="text-[13px]">
           <span className="eyebrow">{option.name}</span>
           <span className="ml-3 text-muted">
-            {value ? value.replace(/^.*· /, "") : option.required ? "Please select" : ""}
+            {value ? value : option.required ? "Please select" : ""}
           </span>
         </legend>
       </div>
-      {groups.map((g) => (
-        <div key={g} className={cx(g && "mt-3 first-of-type:mt-0")}>
-          {g ? <p className="mb-2 text-[12px] text-muted">{g} sizes (UK)</p> : null}
-          <div className="flex flex-wrap gap-2">
-            {option.values
-              .filter((v) => (v.group ?? "") === g)
-              .map((v) => {
-                const selected = value === v.value;
-                const label = v.value.replace(/^.*· /, "");
+      <div className="flex flex-wrap gap-2">
+          {option.values.map((v) => {
+            const selected = value === v.value;
+            const label = v.value;
                 if (option.kind === "swatch") {
                   return (
                     <button
@@ -219,8 +215,7 @@ function OptionSelector({
                     disabled={v.unavailable}
                     onClick={() => onChange(v.value)}
                     className={cx(
-                      "flex min-h-11 cursor-pointer items-center justify-center gap-2 border text-[13px] transition-colors disabled:cursor-not-allowed disabled:text-taupe disabled:line-through",
-                      option.kind === "size" ? "min-w-[60px] px-3" : "px-5",
+                      "flex min-h-11 cursor-pointer items-center justify-center gap-2 border px-5 text-[13px] transition-colors disabled:cursor-not-allowed disabled:text-taupe disabled:line-through",
                       selected
                         ? "border-ink bg-ink text-ivory"
                         : "border-line bg-white hover:border-ink",
@@ -231,9 +226,7 @@ function OptionSelector({
                   </button>
                 );
               })}
-          </div>
-        </div>
-      ))}
+      </div>
       {showError && !value ? (
         <p className="mt-3 text-[13px] text-alert" role="alert">
           Please select a {option.name.toLowerCase()}.
@@ -306,24 +299,10 @@ function Spec({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Detail({ value }: { value: string }) {
-  if (value === TBC) return <Placeholder>To be confirmed</Placeholder>;
-  const parts = value.split(TBC);
-  return (
-    <>
-      {parts.map((p, i) => (
-        <span key={i}>
-          {p}
-          {i < parts.length - 1 ? <Placeholder>To be confirmed</Placeholder> : null}
-        </span>
-      ))}
-    </>
-  );
-}
-
 /* ---------- Product page ---------- */
 export function ProductPage({ product }: { product: Product }) {
   const { add } = useCart();
+  const { query } = useRoute();
   const isObject = product.kind === "object";
   const initial = () =>
     Object.fromEntries(
@@ -333,25 +312,33 @@ export function ProductPage({ product }: { product: Product }) {
         .filter(([, v]) => v),
     ) as Record<string, string>;
 
-  const [selected, setSelected] = useState<Record<string, string>>(initial);
-  const [active, setActive] = useState(0);
+  /** A card can link here with the style it represents, e.g. ?v=heat-coloured */
+  const variantId = query.get("v");
+  const variant = getVariant(product, variantId);
+
+  const [selected, setSelected] = useState<Record<string, string>>(
+    () => variant?.options ?? initial(),
+  );
+  const [active, setActive] = useState(variant?.image ?? 0);
   const [qty, setQty] = useState(1);
   const [state, setState] = useState<"idle" | "loading" | "added">("idle");
   const [attempted, setAttempted] = useState(false);
-  const [ringFit, setRingFit] = useState<RingFit>("");
+  const [ringFit, setRingFit] = useState<RingFit>(variant?.fit ?? "");
   const [relatedTab, setRelatedTab] = useState<"like" | "recent">("like");
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
+  // Preselect the style the shopper arrived from — option, image and SKU together.
   useEffect(() => {
-    setSelected(initial());
-    setActive(0);
+    const v = getVariant(product, variantId);
+    setSelected(v?.options ?? initial());
+    setActive(v?.image ?? 0);
+    setRingFit(v?.fit ?? "");
     setQty(1);
     setState("idle");
     setAttempted(false);
-    setRingFit("");
     setRelatedTab("like");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.handle]);
+  }, [product.handle, variantId]);
 
   useEffect(() => {
     const key = "argent-lune-recently-viewed";
@@ -383,19 +370,15 @@ export function ProductPage({ product }: { product: Product }) {
       ),
     [product, selected],
   );
-  const hasHeatColour = product.options.some((o) => o.values.some((v) => v.heatColoured));
-  const careText = product.care.toLowerCase();
-  const hasDelicateMaterials =
-    ["enamel", "pearl", "gemstone"].some((m) => careText.includes(m)) ||
-    product.collection === "papillon";
-  const sizeOption = !isObject ? product.options.find((o) => o.name === "Size") : undefined;
-  const otherOptions = product.options.filter((o) => o !== sizeOption);
-  const hasMensFit = Boolean(sizeOption?.values.some((v) => v.group === "Men's"));
-  const missingOptions = otherOptions.filter((o) => !selected[o.name]);
+  const sizeOption = !isObject ? product.sizeGuide : undefined;
+  const hasMensFit = Boolean(sizeOption?.mens);
+  const missingOptions = product.options.filter((o) => !selected[o.name]);
   const missingSize = Boolean(sizeOption) && !ringFit;
-  const purchasable = isPurchasable(product);
-  const maxQty = product.stock === "low" ? (product.stockCount ?? 1) : 10;
+  const { stock, stockCount } = stockFor(product, selected, ringFit);
+  const purchasable = isPurchasable({ stock });
+  const maxQty = stock === "low" ? (stockCount ?? 1) : 10;
   const collection = getCollection(product.collection);
+  const sku = skuFor(product, selected, ringFit);
 
   const choose = (o: ProductOption, v: string) => {
     setSelected((s) => ({ ...s, [o.name]: v }));
@@ -414,7 +397,7 @@ export function ProductPage({ product }: { product: Product }) {
             Size: ringFit === "women" ? "Standard Size for Women" : "Standard Size for Men",
           }
         : selected;
-    await add(product, cartOptions, qty, heatSelected);
+    await add({ ...product, stock, stockCount }, cartOptions, qty, heatSelected);
     setState("added");
     setTimeout(() => setState("idle"), 2200);
   };
@@ -469,9 +452,21 @@ export function ProductPage({ product }: { product: Product }) {
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-[108px]">
             <Eyebrow>
-              {product.category} · SKU:{product.sku}
+              {product.category} · SKU: {sku}
             </Eyebrow>
             <h1 className="heading mt-4 text-4xl leading-[1.05] md:text-5xl">{product.name}</h1>
+            {variant?.label ? (
+              <p className="mt-2 flex items-center gap-2 text-[13px] text-muted">
+                {variant.swatch ? (
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 rounded-full ring-1 ring-black/10"
+                    style={{ background: variant.swatch }}
+                  />
+                ) : null}
+                {variant.label}
+              </p>
+            ) : null}
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[18px] tabular-nums">{formatPrice(product.price)}</p>
@@ -482,22 +477,17 @@ export function ProductPage({ product }: { product: Product }) {
                 ) : null}
               </div>
               <StockBadge
-                status={product.stock}
-                label={stockLabel(product)}
+                status={stock}
+                label={stockLabel({ stock, stockCount })}
                 className="text-[13px]"
               />
             </div>
-            {product.soldAsPair ? (
-              <p className="mt-4 inline-flex items-center border border-deep px-2.5 py-1 text-[10px] font-medium tracking-[0.16em] text-deep uppercase">
-                Sold as a pair · Set of Two
-              </p>
-            ) : null}
             <p className="body-copy mt-6">{product.summary}</p>
 
-            {/* Finish / other variants */}
-            {otherOptions.length ? (
+            {/* Style options — colourways and forms that carry their own SKU */}
+            {product.options.length ? (
               <div className="mt-4 divide-y divide-line border-y border-line">
-                {otherOptions.map((o) => (
+                {product.options.map((o) => (
                   <OptionSelector
                     key={o.name}
                     option={o}
@@ -513,11 +503,22 @@ export function ProductPage({ product }: { product: Product }) {
             {sizeOption ? (
               <RingSizeFit
                 productName={product.name}
-                sku={product.sku}
+                sku={sku}
                 hasMens={hasMensFit}
                 value={ringFit}
                 onChange={setRingFit}
               />
+            ) : null}
+
+            {/* Materials, weight and size — per the product's specification */}
+            {!isObject ? (
+              <dl className="mt-6">
+                <Spec label="Materials" value={product.material} />
+                <Spec label="Total weight" value={product.weight} />
+                {product.sizeFit && !sizeOption ? (
+                  <Spec label="Size & fit" value={product.sizeFit} />
+                ) : null}
+              </dl>
             ) : null}
 
             {/* Object specs — always visible for objects */}
@@ -534,9 +535,9 @@ export function ProductPage({ product }: { product: Product }) {
 
             {/* Purchase area */}
             <div className="mt-6 space-y-4">
-              {product.stock === "low" ? (
+              {isObject && stock === "low" ? (
                 <p className="flex items-center gap-2 text-[13px] text-deep">
-                  <InfoIcon size={16} /> Only {product.stockCount} left — handmade in small numbers.
+                  <InfoIcon size={16} /> Only {stockCount ?? 1} left — handmade in small numbers.
                 </p>
               ) : null}
 
@@ -548,16 +549,15 @@ export function ProductPage({ product }: { product: Product }) {
                   <p className="mt-1 text-[13px] leading-relaxed text-ink">
                     {product.salesMethod}
                   </p>
-                  {product.leadTime ? (
-                    <>
-                      <p className="mt-3 text-[11px] font-medium tracking-[0.14em] text-muted uppercase">
-                        Lead time
-                      </p>
-                      <p className="mt-1 text-[13px] leading-relaxed text-muted">
-                        {product.leadTime}
-                      </p>
-                    </>
-                  ) : null}
+                </div>
+              ) : null}
+
+              {product.purchaseNote ? (
+                <div className="rounded-xl border border-line bg-white px-5 py-4">
+                  <p className="eyebrow text-[10px] text-deep">{product.purchaseNote.title}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-ink">
+                    {product.purchaseNote.body}
+                  </p>
                 </div>
               ) : null}
 
@@ -597,14 +597,14 @@ export function ProductPage({ product }: { product: Product }) {
                     {buttonLabel}
                   </Button>
                 </div>
-              ) : product.stock === "sold-out" ? (
+              ) : stock === "sold-out" ? (
                 <>
                   <Button full disabled>
                     Sold Out
                   </Button>
                   <NotifyMe />
                 </>
-              ) : product.stock === "coming-soon" ? (
+              ) : stock === "coming-soon" ? (
                 <>
                   <Button full disabled>
                     Coming Soon
@@ -646,71 +646,12 @@ export function ProductPage({ product }: { product: Product }) {
                   </p>
                 ))}
               </Accordion>
-              <Accordion title="Material & Details">
-                <p>
-                  <Detail value={product.material} />
-                </p>
-              </Accordion>
-              {isObject ? (
-                <Accordion title="UK Hallmarking for our objects">
-                  <div className="space-y-3">
-                    <p>
-                      Each silver object collection will be submitted to a UK Assay Office for
-                      independent testing and hallmarking before dispatch to the customer.
-                    </p>
-                    <p>
-                      In the UK, qualifying precious metal objects are required by law to carry a
-                      recognised hallmark. A hallmark provides independent verification of the
-                      metal’s fineness.
-                    </p>
-                    <p>
-                      Please refer to the official British Hallmarking Council Dealer’s Notice on our
-                      UK Hallmarking page for further information.
-                    </p>
-                  </div>
-                  <TextLink to="/hallmarking" className="mt-4 text-ink">
-                    Learn more about UK Hallmarking for Objects
-                  </TextLink>
-                </Accordion>
-              ) : null}
               <Accordion title="Craftsmanship">
                 <p>{product.craftsmanship}</p>
               </Accordion>
               <Accordion title="Care">
                 <div className="space-y-4">
                   <p>{product.care}</p>
-                  {hasHeatColour ? (
-                    <div>
-                      <p className="text-[13px] font-medium text-ink">Heat-Coloured Silver</p>
-                      <p className="mt-1">
-                        Certain Argent Lune pieces feature colours created through a specialised
-                        heat-colouring process. These colours are not permanent and may gradually
-                        fade, change or wear away over time, particularly through regular wear,
-                        friction and handling.
-                      </p>
-                      <p className="mt-2">
-                        To help preserve the finish, store these pieces separately in a suitable
-                        sealed bag when not in use. Avoid frequent wiping, rubbing, polishing and the
-                        use of silver-cleaning solutions on coloured surfaces. The original colour
-                        and finish cannot be guaranteed to remain unchanged.
-                      </p>
-                    </div>
-                  ) : null}
-                  {hasDelicateMaterials ? (
-                    <div>
-                      <p className="text-[13px] font-medium text-ink">
-                        Enamel, Pearls &amp; Gemstones
-                      </p>
-                      <p className="mt-1">
-                        Pieces featuring enamel, freshwater pearls or gemstones require extra care.
-                        Avoid impact, prolonged moisture exposure, harsh chemicals, abrasive cleaning
-                        products and ultrasonic cleaners unless specifically approved for the piece.
-                        Gently clean with a soft, dry cloth. Do not apply silver-polishing products
-                        directly to enamel, pearls or gemstones unless the product’s care
-                        instructions expressly permit it.
-                      </p>
-                    </div>
-                  ) : null}
                 </div>
                 <TextLink to="/care" className="mt-4 text-ink">
                   Care Guide
@@ -718,21 +659,22 @@ export function ProductPage({ product }: { product: Product }) {
               </Accordion>
               <Accordion title="Shipping & Returns">
                 <p>
-                  Delivery options and timings are shown at checkout. Please see our{" "}
+                  Delivery options, charges and timings are shown at checkout and set out in our{" "}
                   <Link to="/shipping" className="text-ink underline underline-offset-4">
-                    Shipping
-                  </Link>{" "}
-                  and{" "}
+                    Shipping &amp; Delivery policy
+                  </Link>
+                  . Returns are governed by our{" "}
                   <Link to="/returns" className="text-ink underline underline-offset-4">
-                    Returns
-                  </Link>{" "}
-                  pages. For common questions, see our{" "}
-                  <Link to="/faq" className="text-ink underline underline-offset-4">
-                    FAQ
+                    Returns &amp; Refunds policy
                   </Link>
                   .
                 </p>
               </Accordion>
+              <div className="py-5">
+                <Link to="/faq" className="text-ink underline underline-offset-4">
+                  FAQ
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -758,14 +700,39 @@ export function ProductPage({ product }: { product: Product }) {
                 traditional techniques. The marks left behind are not flaws to be polished away, but
                 the record of its making.
               </p>
-              <div className="mt-10 flex flex-wrap gap-4">
+              <div className="mt-10">
                 <ButtonLink to="/craft" variant="outline-light">
                   Discover Our Craft
                 </ButtonLink>
-                <ButtonLink to="/hallmarking" variant="outline-light">
-                  Learn more about UK Hallmarking for Objects
-                </ButtonLink>
               </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Hallmarking — directly beneath The Making */}
+      {isObject && product.objectSpecs ? (
+        <section aria-labelledby="hallmarking-heading" className="border-y border-line bg-stone">
+          <div className="container-lune grid gap-8 py-16 md:py-24 lg:grid-cols-12 lg:gap-6">
+            <div className="lg:col-span-5">
+              <Eyebrow className="mb-5">Hallmarking</Eyebrow>
+              <h2 id="hallmarking-heading" className="display text-4xl md:text-5xl">
+                UK Hallmarking for our objects
+              </h2>
+            </div>
+            <div className="lg:col-span-6 lg:col-start-7">
+              <p className="body-copy">
+                Each silver cup will be submitted to a UK Assay Office for independent testing and
+                hallmarking before dispatch to the customer.
+              </p>
+              <p className="body-copy mt-4">
+                In the UK, qualifying precious metal objects are required by law to carry a
+                recognised hallmark. A hallmark provides independent verification of the metal’s
+                fineness.
+              </p>
+              <TextLink to="/hallmarking" className="mt-6">
+                Learn more about UK Hallmarking for Objects
+              </TextLink>
             </div>
           </div>
         </section>

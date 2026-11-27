@@ -1,35 +1,27 @@
 import { IMG } from "../data/images";
-import { collections, getProduct } from "../data/catalog";
-import { ProductCard } from "../components/ProductCard";
-import { ButtonLink, Eyebrow, Img, Placeholder, Reveal, TextLink } from "../components/ui";
+import { collections } from "../data/catalog";
+import { ButtonLink, Eyebrow, Img, Reveal, TextLink } from "../components/ui";
 import { SymbolBar } from "../components/SymbolBar";
 import { Link } from "../lib/router";
 import { cx } from "../lib/format";
 
-/* Original About copy — preserved and regrouped. */
+/* About copy, per the brand guide. */
 const COPY = {
   positioning:
-    "A quietly contemporary silver jewellery and objects brand, informed by traditional craftsmanship, organic forms, expressive metal textures and the beauty of imperfection.",
-  story:
-    "Argent Lune began with a fascination for the way silver responds to the hand. We look for forms found in nature, surfaces left honest by the tool, and the small irregularities that make a piece unmistakably made. Silver changes with time and touch — and we believe that is where its beauty lies.",
-  time: "Silver deepens with time and wear. A piece that is worn and handled develops a character that cannot be made — only lived. We see this not as decline, but as continuation.",
-  material:
-    "Silver is soft, responsive and honest. It records every strike of the hammer and every pass of the hand. We let those traces remain, so each surface carries its own expression.",
-  nature:
-    "Leaves, branches, the wing of a butterfly. We look to nature not to copy it, but to borrow its rhythm — the way a line bends, the way a surface gathers light.",
+    "Argent Lune is a study in silver, shaped by human hands and inspired by the natural world.",
+  story: [
+    "We are drawn to quiet forms, expressive textures and the beauty of imperfection. Rooted in traditional craftsmanship, our pieces take shape through the skill, patience and considered gestures of the artisans we work with.",
+    "Bringing a contemporary perspective to time-honoured techniques, we create jewellery and silver objects that celebrate the character of the material and the subtle traces of making.",
+    "Each piece tells a quiet story of silver, time and the human touch.",
+  ],
+  behind:
+    "We work with skilled silversmiths and craftspeople using a combination of traditional and contemporary techniques. Some pieces are shaped by hand, while others combine casting with careful hand-finishing and surface detailing.",
   pillars: [
     ["Craftsmanship", "Traditional silversmithing techniques, practised by skilled hands."],
     ["Character", "Organic forms and expressive textures, never mass-produced."],
     ["Care", "Pieces made to be worn, used and kept for a long time."],
   ],
 };
-
-const BEST_SELLERS = [
-  "botanica-branch-pendant",
-  "papillon-pendant-necklace",
-  "botanica-twig-earrings",
-  "papillon-chain-bracelet",
-];
 
 const TEAM_PHOTOS = [
   {
@@ -48,7 +40,6 @@ const TEAM_PHOTOS = [
 ];
 
 export function About() {
-  const best = BEST_SELLERS.map((h) => getProduct(h)!).filter(Boolean);
   const featured = collections.map((c) => ({
     ...c,
     to: c.handle === "objects" ? "/objects" : `/collections/${c.handle}`,
@@ -56,7 +47,7 @@ export function About() {
 
   return (
     <>
-      {/* 1 — Hero */}
+      {/* 1 — About Argent Lune */}
       <section className="relative -mt-24 h-[92svh] min-h-[620px] overflow-hidden bg-ink text-ivory md:-mt-28">
         <Img
           src={IMG.papillonModel}
@@ -69,8 +60,8 @@ export function About() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(37,40,39,0.55)_0%,rgba(37,40,39,0.4)_45%,rgba(37,40,39,0.7)_100%)]" />
         <div className="container-lune relative flex h-full flex-col items-center justify-center text-center">
           <Eyebrow className="mb-6 text-ivory/75">About Argent Lune</Eyebrow>
-          <h1 className="display max-w-5xl text-6xl md:text-8xl xl:text-[116px]">
-            Where Silver <em>Takes Form.</em>
+          <h1 className="display max-w-5xl text-6xl md:text-8xl xl:text-[112px]">
+            Silver, Shaped <em>by Hand.</em>
           </h1>
           <p className="mx-auto mt-8 max-w-2xl text-[16px] leading-relaxed text-ivory/85 md:text-[18px]">
             {COPY.positioning}
@@ -81,27 +72,20 @@ export function About() {
       {/* 2 — Our Story */}
       <section className="bg-ivory">
         <div className="mx-auto grid max-w-[1440px] md:grid-cols-2">
-          <div className="relative">
-            <Img
-              src={IMG.portraitWarm}
-              alt="Portrait of the brand representative wearing silver jewellery"
-              className="aspect-[4/5] md:aspect-auto md:h-full md:min-h-[720px]"
-              position="center 30%"
-            />
-            <span className="absolute bottom-4 left-4 bg-ivory/90 px-3 py-1.5 text-[11px] italic text-muted">
-              Founder portrait to be supplied
-            </span>
-          </div>
+          <Img
+            src={IMG.handsTool}
+            alt="A silversmith shaping and finishing a piece at the bench"
+            className="aspect-[4/5] md:aspect-auto md:h-full md:min-h-[720px]"
+            position="center 40%"
+          />
           <Reveal className="flex flex-col justify-center px-5 py-16 md:px-12 md:py-24 xl:px-20">
             <Eyebrow className="mb-6">Our Story</Eyebrow>
             <h2 className="display text-5xl md:text-6xl">Our Story</h2>
             <div className="body-copy mt-8 max-w-[34rem] space-y-5 text-[16px]">
-              <p>{COPY.story}</p>
-              <p>{COPY.time}</p>
+              {COPY.story.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
             </div>
-            <p className="mt-8 text-[13px] text-muted">
-              <Placeholder>Founder name and role to be confirmed</Placeholder>
-            </p>
             <TextLink to="/craft" className="mt-10">
               Discover Our Craft
             </TextLink>
@@ -109,15 +93,13 @@ export function About() {
         </div>
       </section>
 
-      {/* 3 — Our Team */}
+      {/* 3 — Behind the Work */}
       <section className="border-t border-line">
         <div className="container-lune grid gap-12 py-20 md:py-28 lg:grid-cols-2 lg:gap-16">
           <Reveal className="flex flex-col justify-center">
             <Eyebrow className="mb-6">Behind the Work</Eyebrow>
-            <h2 className="display text-5xl md:text-6xl">The Argent Lune Team</h2>
-            <p className="mt-8">
-              <Placeholder>Team introduction to be confirmed</Placeholder>
-            </p>
+            <h2 className="display text-5xl md:text-6xl">The Hands Behind Each Piece</h2>
+            <p className="body-copy mt-8 max-w-md">{COPY.behind}</p>
             <ul className="mt-10 divide-y divide-line border-y border-line">
               {COPY.pillars.map(([t, d]) => (
                 <li key={t} className="grid gap-1 py-5 sm:grid-cols-[160px_1fr] sm:gap-6">
@@ -175,99 +157,6 @@ export function About() {
         </div>
       </section>
 
-      {/* 5 — Charity & Donation (structure only; figures to be supplied) */}
-      <section className="bg-stone">
-        <div className="mx-auto grid max-w-[1440px] md:grid-cols-2">
-          <Img
-            src={IMG.woodland}
-            alt="Sunlight falling through a quiet woodland"
-            className="aspect-[4/3] md:aspect-auto md:h-full md:min-h-[620px]"
-          />
-          <Reveal className="flex flex-col justify-center px-5 py-16 md:px-12 md:py-24 xl:px-20">
-            <Eyebrow className="mb-6">Charity &amp; Donation</Eyebrow>
-            <p className="display text-6xl text-muted md:text-7xl">
-              <span className="border-b border-dashed border-taupe">[Amount]</span>
-            </p>
-            <p className="eyebrow mt-4">Donated to date</p>
-            <p className="mt-8">
-              <Placeholder>
-                Charity partners, giving commitment and verified figures to be confirmed
-              </Placeholder>
-            </p>
-            <div className="mt-10 grid grid-cols-2 gap-6 border-t border-line pt-8">
-              {["[Partner organisations]", "[Projects supported]"].map((s) => (
-                <div key={s}>
-                  <p className="display text-3xl text-muted">—</p>
-                  <p className="mt-1 text-[12px] italic text-muted">{s}</p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* 6 — Best Sellers */}
-      <section className="container-lune py-20 md:py-28">
-        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
-          <h2 className="display text-5xl md:text-6xl">Best Sellers</h2>
-          <TextLink to="/shop">Shop All</TextLink>
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-6 lg:grid-cols-4">
-          {best.map((p, i) => (
-            <Reveal key={p.handle} delay={i * 80}>
-              <ProductCard product={p} />
-            </Reveal>
-          ))}
-        </div>
-        <p className="mt-10 text-[12px] italic text-muted">
-          Best seller selection to be confirmed against sales data.
-        </p>
-      </section>
-
-      {/* 7 — Craftsmanship & Intentional Design */}
-      <section className="border-t border-line bg-ivory">
-        <div className="container-lune grid gap-6 py-20 md:grid-cols-2 md:py-28">
-          {[
-            {
-              eyebrow: "Craftsmanship",
-              title: "Silver, allowed to speak",
-              body: COPY.material,
-              img: IMG.handsTool,
-              alt: "A silversmith polishing and shaping a ring at the bench",
-              cta: { to: "/craft", label: "Discover Our Craft" },
-            },
-            {
-              eyebrow: "Intentional Design",
-              title: "Forms borrowed from the natural world",
-              body: COPY.nature,
-              img: IMG.heroRings,
-              alt: "Sculptural silver rings worn close to the face",
-              cta: { to: "/jewellery", label: "Explore Jewellery" },
-            },
-          ].map((c, i) => (
-            <Reveal key={c.title} delay={i * 100} className="h-full">
-              <article className="flex h-full flex-col bg-white">
-                <Img
-                  src={c.img}
-                  alt={c.alt}
-                  className="aspect-[4/3]"
-                  position={i === 1 ? "center 62%" : undefined}
-                />
-                <div className="flex flex-1 flex-col p-7 md:p-10">
-                  <Eyebrow>{c.eyebrow}</Eyebrow>
-                  <h3 className="display mt-4 text-4xl">{c.title}</h3>
-                  <p className="body-copy mt-5 flex-1">{c.body}</p>
-                  <TextLink to={c.cta.to} className="mt-8 self-start">
-                    {c.cta.label}
-                  </TextLink>
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* 8 — Symbol bar (sits directly above the global footer) */}
       <SymbolBar />
     </>
   );

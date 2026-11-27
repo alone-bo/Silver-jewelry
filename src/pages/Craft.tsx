@@ -42,7 +42,7 @@ export function Craft() {
           <p className="body-copy mt-7 max-w-2xl text-[16px] md:mt-9 md:text-[17px]">
             A glimpse into traditional silversmithing in Yunnan, where silver is still worked by
             hand at the bench. From the first heat to the final polish, every stage is guided by eye,
-            ear and touch. These are the quiet rhythms behind each Argent Lune piece.
+            ear and touch. 
           </p>
         </div>
       </section>

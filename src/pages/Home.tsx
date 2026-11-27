@@ -9,15 +9,15 @@ import benchHands from "@/assets/images/silversmith-hammering-ginkgo.jpg";
 const SERIES = [
   {
     handle: "botanica",
-    items: ["botanica-branch-pendant", "botanica-leaf-ring"],
+    items: ["willow-leaf-drop-earrings", "pinecone-pendant-necklace"],
   },
   {
     handle: "materia",
-    items: ["materia-molten-ring", "materia-hammered-band"],
+    items: ["cross-sculptural-ring", "strata-rock-texture-ring"],
   },
   {
     handle: "miniature-silverware",
-    items: ["miniature-wine-cup-pendant", "miniature-tumbler-pendant"],
+    items: ["miniature-wine-cup-pendant-a", "miniature-wine-cup-pendant-b"],
   },
 ] as const;
 
@@ -33,15 +33,15 @@ export function Home() {
       <section className="border-b border-line bg-ivory">
         <div className="container-lune grid items-center gap-9 pb-12 pt-8 md:gap-12 md:pb-16 md:pt-12 lg:grid-cols-12 lg:gap-14 lg:py-16">
           <div className="lg:col-span-6">
-            <Eyebrow className="text-deep">The Atelier</Eyebrow>
+            <Eyebrow className="text-deep">Silver Jewellery & Objects</Eyebrow>
             <h1 className="display mt-4 text-[46px] leading-[0.98] sm:text-6xl md:text-7xl xl:text-[96px]">
               Silver, shaped
               <br />
               <em className="font-light">by hand.</em>
             </h1>
             <p className="body-copy mt-5 max-w-md text-[16px] md:mt-7 md:text-[17px]">
-              Step into a town of silversmiths. Hear the rhythm of silver taking shape — raised by
-              hammer, finished at the bench.
+              Step into a town of silversmiths.<br/>
+              Hear the rhythm of silver taking shape.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3 md:mt-9 md:gap-4">
               <ButtonLink to="/shop">Explore the Collection</ButtonLink>
@@ -175,7 +175,7 @@ export function Home() {
               className="aspect-[4/5]"
             />
             <p className="mt-4 flex justify-between text-[13px] text-muted">
-              <span>Sculpt - Hand-Hammered Fine Silver Cups</span>
+              <span>Sculpt — Hand-Hammered Fine Silver Cups</span>
               <span>Set of Two</span>
             </p>
           </Reveal>
@@ -223,12 +223,6 @@ export function Home() {
           <p className="body-copy mt-6 text-[16px] md:mt-8 md:text-[17px]">
             Rooted in traditional craftsmanship, Argent Lune brings silver into contemporary life
             through jewellery and objects shaped by hand.
-          </p>
-          <p className="body-copy mt-4 text-[16px] md:text-[17px]">
-            Argent Lune began with a fascination for the way silver responds to the hand. We look for
-            forms found in nature, surfaces left honest by the tool, and the small irregularities
-            that make a piece unmistakably made. Silver changes with time and touch — and we believe
-            that is where its beauty lies.
           </p>
           <TextLink to="/about" className="mt-7 md:mt-9">
             Our Story
